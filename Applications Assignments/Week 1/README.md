@@ -1,1 +1,0 @@
-This repository includes the files for Assessment 1, featuring a straightforward program designed to perform operations on a provided array. The assessment mandates comprehensive code documentation and the utilization of Git version control.
