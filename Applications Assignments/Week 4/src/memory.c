@@ -1,27 +1,6 @@
-/******************************************************************************
- * Copyright (C) 2017 by Alex Fosdick - University of Colorado
- *
- * Redistribution, modification or use of this software in source or binary
- * forms is permitted as long as the files maintain this copyright. Users are 
- * permitted to modify this and use it to learn about the field of embedded
- * software. Alex Fosdick and the University of Colorado are not liable for any
- * misuse of this material. 
- *
- *****************************************************************************/
-/**
- * @file memory.c
- * @brief Abstraction of memory read, write, and manipulation operations
- *
- * This implementation file provides an abstraction of reading and
- * writing to memory via function calls.
- * 
- * @author Alex Fosdick
- * @date 1/4/2017
- * @edited 24/10/2020 by Mohammed Abdelalim
- *
- */
-#include "../include/common/memory.h"
-#include <stddef.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include "memory.h"
 
 /***********************************************************
  Function Definitions
@@ -49,57 +28,74 @@ void clear_all(char * ptr, unsigned int size){
   set_all(ptr, 0, size);
 }
 
-uint8 * my_memmove(uint8 * src, uint8 * dst, uint8 length){
-	
-	int16 datatoMove[length];
-	// Copy to buffer
-	my_memcopy(src, datatoMove, length);
-	
-	// Copy from buffer to destination
-	my_memcopy(datatoMove, dst, length);
-   
+uint8_t * my_memmove(uint8_t * src, uint8_t * dst, size_t length){
+    // Create pointers to the pointers
+    uint8_t *d = dst;
+    uint8_t *s = src;
+
+    // If the destination memory address is less than the source address
+    if (d < s){
+        while (length--){
+            *d++= *s++;
+        }
+    }
+    // When destination memory address is greater than source address
+    else{
+        uint8_t *lasts = s + (length-1);    // gets the address of the last source byte
+        uint8_t *lastd = d + (length-1);    // gets the address of the last destination byte
+        while (length--){
+            *lastd-- = *lasts--;
+        }
+    }
     return dst;
 }
 
-uint8 * my_memcopy(uint8 * src, uint8 * dst, uint8 length){
-    for (int dataCount=0; dataCount<length; dataCount++){
-        *(dst+dataCount) = *(src+dataCount);
-    }    
+uint8_t * my_memcopy(uint8_t * src, uint8_t * dst, size_t length){
+    uint8_t *d = dst;
+    uint8_t *s = src;
+    while (length){
+        length--;
+        *d++ = *s++;
+    }
     return dst;
 }
 
-uint8 * my_memset(uint8 * src, uint8 length, uint8 value){
-    for (int cellCount=0; cellCount<length; cellCount++){
-        *(src+cellCount) = value;
+uint8_t * my_memset(uint8_t * src, size_t length, uint8_t value){
+    uint8_t *s = src;
+    while (length){
+        length--;
+        *s++ = value;
     }
     return src;
 }
 
-uint8 * my_memzero(uint8 * src, uint8 length){
-     for (int cellCount=0; cellCount<length; cellCount++){
-        *(src+cellCount) = 0;
+uint8_t * my_memzero(uint8_t * src, size_t length){
+    return my_memset(src, length, 0);
+}
+
+uint8_t * my_reverse(uint8_t * src, size_t length){
+    // printf("Reversing the order of %d bytes located between 0x%u-0x%u\n", length, src, src+length-1);
+    uint8_t *temp;
+    temp = (uint8_t*)malloc(length*sizeof(uint8_t)); // Temp memory to hold existing content
+    if(! temp){
+        printf("ERROR: allocating dynamic memory for my_reverse function call\n");
     }
+    uint8_t *lastTemp = temp+length; // Pointer to last position in temp memory
+    for(int i=0; i<length; i++){
+        *(temp+i)=*(src+i);
+    }
+    // printf("Temp value: %s\n", temp);
+    while(length--){
+        *(src+length)= *(lastTemp-length-1);
+    }
+    free(temp);
     return src;
 }
 
-uint8 * my_reverse(uint8 * src, uint8 length){
-    uint8 numberOfSwapOperations = length/2;
-    uint8 temp=0;
-    for (int counter=0; counter<numberOfSwapOperations; counter++){
-        temp = *(src + counter);
-        *(src+counter) = *(src+length-1-counter);
-        *(src+length-1-counter) = temp;
-    }
-    return src;
+int32_t * reserve_words(size_t length){
+    return malloc(length*sizeof(length));
 }
 
-int32 * reserve_words(uint8 length){
-    if (((int32 *) malloc(length)) != NULL){
-        return ((int32 *) malloc(length));
-    }
-    else return NULL;
-}
-
-void free_words(int32 * src){
-    free((void *)src);
+void free_words(uint32_t * src){
+    return free(src);
 }
