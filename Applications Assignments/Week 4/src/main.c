@@ -1,20 +1,18 @@
-/**
- * @file main.c
- * 
- * @author Mohammed Abdelalim
- * @date 26/10/2020
- *
- */
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include "memory.h"
+#include "stats.h"
+#include "data.h"
 
-#include "../include/common/course1.h"
-#include "../include/common/memory.h"
-#include "../include/common/stats.h"
-#include "../include/common/data.h"
-#include "../include/common/platform.h"
 
-void main (void){
-
+int main(){
     #ifdef COURSE1
-    course1();
+        printf("calling course1()\n");
+        course1();  
+        return 0;
     #endif
+
+    return 0;
 }
+
