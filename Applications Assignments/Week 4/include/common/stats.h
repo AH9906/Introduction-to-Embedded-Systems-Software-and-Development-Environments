@@ -1,120 +1,100 @@
 /******************************************************************************
- * Copyright (C) 2017 by Alex Fosdick - University of Colorado
+ * Copyright (C) 2023 by @author
  *
  * Redistribution, modification or use of this software in source or binary
  * forms is permitted as long as the files maintain this copyright. Users are 
  * permitted to modify this and use it to learn about the field of embedded
- * software. Alex Fosdick and the University of Colorado are not liable for any
- * misuse of this material. 
+ * software. Josh Illes is not liable for any misuse of this material. 
  *
  *****************************************************************************/
 /**
- * @file stats.h 
- * @brief Definitions and macros required for the c1m1 assignment
+ * @file stats.c
+ * @brief Functions for providing statics on an array of numbers, 
+ *   and general practice in the "C" language
  *
  *
- * @author Mohammed Abdelalim
- * @date 7/9/2020
+ * @author Joshua Illes
+ * @date 2021-02-09
  *
  */
 #ifndef __STATS_H__
 #define __STATS_H__
 
-/**
- * @brief Prints the statistics of a given array
- *
- * This function takes the resulting statistics done on an array
- * which are: minimum, maximum, mean and median, and print those
- * values on the screen
- * 
- * @param minimum The minimum number of the given array
- * @param maximum The maximum number of the given array
- * @param mean The mean of the given array
- * @param median The median of the given array
- *
- * @return void
- */
-void print_statistics (unsigned char minimum, unsigned char maximum, float mean, unsigned char median);
+/* Add Your Declarations and Function Comments here */ 
 
+typedef struct stats{
+    uint8_t *numArray;
+    uint8_t arrayLength;
+    uint8_t median;
+    uint8_t mean;
+    uint8_t max;
+    uint8_t min;
+} stat;
 
 /**
- * @brief Prints the contents of a given array
- *
- * This function takes the given array and prints it to the
- * screen.
+ * @brief Print out all the statistics related to the array
  * 
- * @param array The first element of the array to be printed on the screen
- * @param counter The size of the array to be printed
- *
- * @return void
+ * @param arrayPtr Pointer to the array of data
+ * @param arrayLength Number of elements in the array
+ * 
+ * @return Void()
  */
-void print_array (unsigned char *array, unsigned int counter);
+void print_statistics(uint8_t *arrayPtr, uint8_t arrayLength);
 
 
 /**
- * @brief Finds the median of the given array
- *
- * This function takes the given array and finds
- * its median.
+ * @brief Prints the array
  * 
- * @param array The first element of the array to be processed
- * @param counter The size of the array to be printed
- *
- * @return median The median value of the given array.
+ * @param arrayPtr Pointer to the array of data
+ * @param arrayLength Number of elements in the array
+ * 
+ * @return Void()
  */
-unsigned char find_median (unsigned char *array, unsigned int counter);
+void print_array(uint8_t *arrayPtr, uint8_t arrayLength);
 
 /**
- * @brief Finds the mean of the given array
- *
- * This function takes the given array and finds
- * its mean.
+ * @brief Sorts the array inplace from largest (index 0) to smallest (index n-1)
  * 
- * @param array The first element of the array to be processed
- * @param counter The size of the array to be printed
- *
- * @return mean The mean value of the given array.
+ * @param arrayPtr Pointer to the array of data
+ * @param arrayLength Number of elements in the array
  */
-float find_mean (unsigned char *array, unsigned int counter);
+void sort_array(uint8_t *arrayPtr, uint8_t arrayLength);
 
 /**
- * @brief Finds the maximum of the given array
- *
- * This function takes the given array and finds
- * its maximum.
+ * @brief Given an array pointer and length of array, returns the minimum value in the array
  * 
- * @param array The first element of the array to be processed
- * @param counter The size of the array to be printed
- *
- * @return maximum The maximum value of the given array.
+ * @param arrayPtr Pointer to the array of data
+ * @param arrayLength Number of elements in the array
+ * @return uint8_t minimum value in array
  */
-unsigned char find_maximum (unsigned char *array, unsigned int counter);
+uint8_t find_min(uint8_t *arrayPtr, uint8_t arrayLength);
 
 /**
- * @brief Finds the minimum of the given array
- *
- * This function takes the given array and finds
- * its minimum.
+ * @brief Given an array pointer and length of array, returns the maximum value in the array
  * 
- * @param array The first element of the array to be processed
- * @param counter The size of the array to be printed
- *
- * @return minimum The minimum value of the given array.
+ * @param arrayPtr Pointer to the array of data
+ * @param arrayLength Number of elements in the array
+ * @return uint8_t maximum value in array
  */
-unsigned char find_minimum (unsigned char *array, unsigned int counter);
+uint8_t find_max(uint8_t *arrayPtr, uint8_t arrayLength);
 
 /**
- * @brief Sorts the given array from the largest to smallest
- *
- * This function takes the given array and its length, sorts
- * the array from the largest to smallest using bubble sort and returns the
- * sorted array.
+ * @brief Given an array pointer and length of array, returns the average value of the array
  * 
- * @param array The first element of the array to be processed
- * @param counter The size of the array to be printed
- *
- * @return median The median value of the given array.
+ * @param arrayPtr Pointer to the array of data
+ * @param arrayLength Number of elements in the array
+ * @return uint8_t average value in array
  */
-void sort_array (unsigned char *array, unsigned int counter);
+uint8_t find_mean(uint8_t *arrayPtr, uint8_t arrayLength);
+
+/**
+ * @brief Given an array pointer and length of array, returns the median value of the array
+ * 
+ * @param arrayPtr Pointer to the array of data
+ * @param arrayLength Number of elements in the array
+ * @return uint8_t median value in array
+ */
+uint8_t find_median(uint8_t *arrayPtr, uint8_t arrayLength);
+
 
 #endif /* __STATS_H__ */
