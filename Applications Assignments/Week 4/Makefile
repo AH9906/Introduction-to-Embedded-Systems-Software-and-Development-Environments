@@ -1,142 +1,149 @@
-#******************************************************************************
-# Copyright (C) 2017 by Alex Fosdick - University of Colorado
-#
-# Redistribution, modification or use of this software in source or binary
-# forms is permitted as long as the files maintain this copyright. Users are 
-# permitted to modify this and use it to learn about the field of embedded
-# software. Alex Fosdick and the University of Colorado are not liable for any
-# misuse of this material. 
-#
-#*****************************************************************************
-
 #------------------------------------------------------------------------------
-# This is the second assessment in the course, it's a makefile to automate the build process
+# <Put a Description Here>
 #
 # Use: make [TARGET] [PLATFORM-OVERRIDES]
 #
 # Build Targets:
-#      <file>.i --> this rule generates the intermediate file outputted from preprocessor from the corresponding C file, it also generates the dependecy .d file
-#      <file>.asm --> generates the assembly file from the corresponding C file
-#      <file>.o --> compiles all the source files and generates the corresponding object file
-#      compile-all --> compiles all the src files without linking and generates the corresponding object files
-#      build --> links the object files into one executable file named c1m2.out and generates the memory map of the executable, it also shows a brief information about the output code size on the CLI 
-#      clean --> removes all the generated files whether .i, .o, .d, .map, .s, .out
+#      <Put a description of the supported targets here>
 #
 # Platform Overrides:
-#      This makefile supports 2 platforms: the host linux machine, and the MSP432 microcontroller.
-#      For the MSP432 we define its specific linker file (msp432p401r.lds), the CPU, architecture which are different from the case of "host" platform
+#      <Put a description of the supported Overrides here
 #
 #------------------------------------------------------------------------------
-include sources.mk
+
+# -c  Compile and Assemble File, Do Not Link
+# -o <FILE> Compile, Assemble, and Link to OUTPUT_FILE
+# -g  Generate Debugging Information in Executable
+# -Wall  Enable All Warning Messages
+# -Werror  Treat All Warnings as Errors
+# -I<DIR>  Include this <DIR> to look for header files
+# -ansi -std=STANDARD  Which standard version to use (ex: c89, c99)
+# -v  Verbose output form GCC
+
+SHELL=/bin/bash
+
+SRC_DIR := ./src
+OBJ_DIR := ./obj
+INC_DIR := ./include
+
+SOURCES = 	$(SRC_DIR)/main.c \
+			$(SRC_DIR)/memory.c \
+			$(SRC_DIR)/stats.c \
+			$(SRC_DIR)/data.c \
+			$(SRC_DIR)/course1.c 
+
+INCLUDES = -I include/common/
 
 # Platform Overrides
-BASENAME = course1
- 
-# Architectures Specific Flags
-ifeq ($(PLATFORM), MSP432)
-	LINKER_FILE = -T msp432p401r.lds 
+PLATFORM=HOST
+
+# Compile time switches
+COURSE1=false
+VERBOSE=false
+
+
+# General Flags for all platforms
+GEN_FLAGS = -Wall \
+			-g \
+			-O0 \
+			-std=c99
+			# -Werror \
+
+TARGET = final_assesment
+
+# Platform Dependant Variables
+ifeq ($(PLATFORM),MSP432)
+	# MSP432 dependant build options
 	CPU = cortex-m4
 	ARCH = armv7e-m
-	SPECS = nosys.specs
-else
-	CPU = x86_64
-	ARCH:=$(shell arch)
-endif 
 
-# Compiler Flags and Defines
-ifeq ($(PLATFORM), MSP432)
+	SOURCES+= 	./startup_msp432p401r_gcc.c \
+				./system_msp432p401r.c \
+				./interrupts_msp432p401r_gcc.c
+	
+	INCLUDES+= 	-I include/CMSIS/ \
+				-I include/msp432/
+
+	# Compiler
 	CC = arm-none-eabi-gcc
+
+	# Linker
 	LD = arm-none-eabi-ld
-	LDFLAGS = -Wl,-Map=$(BASENAME).map $(LINKER_FILE) 
-	### -Wl,option: Pass option as an option to the linker. If option contains commas, it is split into multiple options at the commas. You can use this syntax to pass an argument to the option. For 		example, -Wl,-Map,output.map passes -Map output.map to the linker. When using the GNU linker, you can also get the same effect with -Wl,-Map=output.map.
-	CFLAGS = -mcpu=$(CPU) -march=$(ARCH) --specs=$(SPECS) -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -Wall -O0 -g -std=c99
-	### Some flags as described from GCC documentation:
-	### -Wall: This enables all the warnings about constructions that some users consider questionable, and that are easy to avoid (or modify to prevent the warning), even in conjunction with macros.
-	### -Werror: Make all warnings into errors. 
-	### -O0: Reduce compilation time and make debugging produce the expected results. This is the default.    
-	CPPFLAGs = -M -MF test.d
-	DEFINEFLAG = -DMSP432
+	SIZE = arm-none-eabi-size
+
+	# Linker Flags
+	LINKER_FILE = ../msp432p401r.lds
+	LDFLAGS = -Wl,-Map=$(TARGET).map -T $(LINKER_FILE) -lm
+	
+	# Compiler Flags
+	CFLAGS = 	$(GEN_FLAGS) \
+				-mcpu=$(CPU) \
+				-mthumb \
+				-march=$(ARCH) \
+				-mfloat-abi=hard \
+				-mfpu=fpv4-sp-d16\
+				--specs=nosys.specs
+	CPPFLAGS = -DMSP432 $(INCLUDES)
+
+
 else
+	# @echo Host platform detected
 	CC = gcc
-	LDFLAGS = -Wl,-Map=$(BASENAME).map
-	CFLAGS = -Wall -O0 -g -std=c99
-	CPPFLAGs = -M -MF test2.d
-	DEFINEFLAG = -DHOST
+	CFLAGS = $(GEN_FLAGS)
+	CPPFLAGS = -DHOST $(INCLUDES)
+	SIZE = size
+	LDFLAGS = -lm
+
 endif
 
-ifeq ($(VERBOSE), TRUE)
-	CFLAGS += -DVERBOSE
+# IF COURSE1 is defined, add a flag
+ifeq ($(COURSE1), true)
+	CPPFLAGS += -DCOURSE1
 endif
 
-ifeq ($(COURSE1), TRUE)
-	CFLAGS += -DCOURSE1
+# IF VERBOSE is defined, add a flag
+ifeq ($(VERBOSE), true)
+	CPPFLAGS += -DVERBOSE
 endif
 
-# More Declared Variables
-OBJS:= $(SOURCES:.c=.o)
-ASMS:= $(SOURCES:.c=.s)
-PPS:= $(SOURCES:.c=.i)
-MAPS:= $(SOURCES:.c=.map)
-OUTS:= $(SOURCES:.c=.out)
+PREP = $(SOURCES:.c=.i)	# Preprocessor Files
+DEPS = $(SOURCES:.c=.d)	# Dependancy Files
+ASMS = $(SOURCES:.c=.asm)	# Assembly Files
+OBJS = $(SOURCES:.c=.o)	# Object files
 
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-# Target: <file>.i
-# Prerequisites: the .c file
-# Output: the .d as well as .i files
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-%.i : %.c
-	$(CC) $(CPPFLAGs) $(DEFINEFLAG) $<
-	$(CC) $(DEFINEFLAG) -E -o $@ $<
-#$(CC) $(CPPFLAGs) -E -o $@ $< 
-### -E: Stop after the preprocessing stage; do not run the compiler proper. The output is in the form of preprocessed source code, which is sent to the standard output. 
+.PHONY: compile-all build clean run
 
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-# Target: <file>.asm
-# Prerequisites: the .c file
-# Output: the .asm file whether from the .c file or the object file
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-%.asm : %.c
-	$(CC) $(DEFINEFLAG) $(CFLAGS) -S $<
-	objdump $(OBJS) -D
-### -S: Stop after the stage of compilation proper; do not assemble. The output is in the form of an assembler code file for each non-assembler input file specified. 
+# Compile all object files and link into a final executable.
+build: $(TARGET).out
 
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-# Target: <file>.o
-# Prerequisites: the .c file
-# Output: the .o file corresponding to the provided .c file
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-%.o : %.c
-	$(CC) $(DEFINEFLAG) $(CFLAGS) -c $<
+$(TARGET).out: $(OBJS)
+	$(CC) $(OBJS) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@
+	$(SIZE) $@
+	
+# Generate Preprocesed output of all c-program implementation files (use the -E flag)
+%.i: %.c
+	$(CC) -E $< $(CFLAGS) $(CPPFLAGS) -o $@
 
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-# Target: compile-all
-# Prerequisites: the source files
-# Output: all source files are compiled but without linking and their corresponding .o files are generated
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-.PHONY: compile-all
-compile-all: $(SOURCES)
-#$(OBJS): $(SOURCES)
-	$(CC) $(DEFINEFLAG) $(CFLAGS) -c $(SOURCES) -lm
+# Generate assembly output of c-program implementation files and the final output executable (Use the –S flag and the objdump utility).
+%.asm: %.c
+	$(CC) -S $< $(CFLAGS) $(CPPFLAGS) -o $@
 
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-# Target: build
-# Prerequisites: the main.out file
-# Output: the final executable file after linking and a brief report regarding the application size
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-.PHONY: build
-build: $(OUTS)
-#main.out
-# I've a question here, if I set the prerequisites to main.o instead of main.out, the process doesn't get finished ... also how can make compiles the files and generate the object files when they are not provided by user as prerequesites. How can make understand that it should generate the .o files from the .c files before proceeding?
-$(OUTS): $(SOURCES)
-	$(CC) $(DEFINEFLAG) $(CFLAGS) $(LDFLAGS) -o course1.out $^ -lm
-	size -Atd course1.out
+# Generate the object file for all c-source files (but do not link) by specifying the object file you want to compile.
+%.o: %.c
+	$(CC) -c $< $(CFLAGS) $(CPPFLAGS) -o $@
 
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-# Target: clean
-# Prerequisites: None
-# Output: all generated file are removed and the directory is cleaned for a new build
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-.PHONY: clean
+# Generate Dependancy files for each Source File
+%.d: %c
+	$(CC) -E -M $<  $(CPPFLAGS) -o $@
+
+# Compile all object files, but DO NOT link.
+compile-all: $(OBJS)
+
 clean:
-#rm -f $(OBJS) main.out $(ASMS) $(PPS) $(MAPS)
-	rm -f *.i *.d *.map *.s *.out *.o
+	# This should remove all compiled objects, preprocessed outputs, assembly outputs, executable files and build output files.
+	@echo Removing all built files
+	rm -f ${SRC_DIR}/*{.o,.out,.map,.asm,.i} $(TARGET).out
+
+# Build all and run file
+run: $(TARGET).out
+	./$(TARGET).out
